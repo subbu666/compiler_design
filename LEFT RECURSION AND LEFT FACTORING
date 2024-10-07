@@ -1,0 +1,116 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define SIZE 20
+
+// Function to eliminate left recursion
+void eliminateLeftRecursion() {
+    char pro[SIZE], alpha[SIZE], beta[SIZE];
+    int non_terminal, i, j, index = 3;
+
+    printf("Enter the Production as E->E|A: ");
+    fgets(pro, SIZE, stdin);
+    pro[strcspn(pro, "\n")] = '\0'; // Remove the trailing newline character
+
+    non_terminal = pro[0];
+    if (non_terminal == pro[index]) { // Checking if the Grammar is LEFT RECURSIVE
+        // Getting Alpha
+        for (i = ++index, j = 0; pro[i] != '|' && pro[i] != '\0'; i++, j++) {
+            alpha[j] = pro[i];
+        }
+        alpha[j] = '\0'; // End the alpha string
+
+        if (pro[++i] != '\0') { // Checking if there is a character after Vertical Bar (|)
+            // Getting Beta
+            for (j = i, i = 0; pro[j] != '\0'; i++, j++) {
+                beta[i] = pro[j];
+            }
+            beta[i] = '\0'; // End the beta string
+
+            // Display the transformed grammar
+            printf("\nGrammar Without Left Recursion: \n");
+            printf(" %c->%s%c'\n", non_terminal, beta, non_terminal);
+            printf(" %c'->%s%c'|#\n", non_terminal, alpha, non_terminal);
+        } else {
+            printf("This Grammar CAN'T be REDUCED.\n");
+        }
+    } else {
+        printf("\nThis Grammar is not LEFT RECURSIVE.\n");
+    }
+}
+
+// Function to perform left factoring
+void performLeftFactoring() {
+    char gram[SIZE], part1[SIZE], part2[SIZE], modifiedGram[SIZE], newGram[SIZE];
+    int i, j = 0, k = 0, pos = 0;
+
+    printf("Enter Production : A->");
+    fgets(gram, SIZE, stdin);
+    gram[strcspn(gram, "\n")] = '\0'; // Remove the trailing newline character
+
+    // Splitting into two parts using '|'
+    for (i = 0; gram[i] != '|' && gram[i] != '\0'; i++, j++) {
+        part1[j] = gram[i];
+    }
+    part1[j] = '\0';
+
+    for (j = ++i, i = 0; gram[j] != '\0'; j++, i++) {
+        part2[i] = gram[j];
+    }
+    part2[i] = '\0';
+
+    // Finding common prefix
+    for (i = 0; i < strlen(part1) && i < strlen(part2); i++) {
+        if (part1[i] == part2[i]) {
+            modifiedGram[k++] = part1[i];
+            pos = i + 1;
+        } else {
+            break;
+        }
+    }
+
+    // Constructing new grammar rule for the common part
+    if (k > 0) {
+        modifiedGram[k] = 'X';
+        modifiedGram[++k] = '\0';
+
+        for (i = pos, j = 0; part1[i] != '\0'; i++, j++) {
+            newGram[j] = part1[i];
+        }
+        newGram[j++] = '|';
+
+        for (i = pos; part2[i] != '\0'; i++, j++) {
+            newGram[j] = part2[i];
+        }
+        newGram[j] = '\0';
+
+        // Display the result
+        printf("\nGrammar Without Left Factoring:\n");
+        printf(" A->%s\n", modifiedGram);
+        printf(" X->%s\n", newGram);
+    } else {
+        printf("\nNo common prefix found, no left factoring required.\n");
+    }
+}
+
+int main() {
+    int choice;
+    printf("Choose an option:\n1. Eliminate Left Recursion\n2. Perform Left Factoring\n");
+    printf("Enter your choice (1 or 2): ");
+    scanf("%d", &choice);
+    getchar(); // Consume the newline character after scanf
+
+    switch (choice) {
+        case 1:
+            eliminateLeftRecursion();
+            break;
+        case 2:
+            performLeftFactoring();
+            break;
+        default:
+            printf("Invalid choice.\n");
+            break;
+    }
+    return 0;
+}
