@@ -1,0 +1,111 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+char stack[20], gram[10][10], input[20];
+int size, sizei, sizes;
+
+// Function to get the grammar rules
+void getGram() {
+    int i;
+    printf("\nEnter Number of Rules: ");
+    scanf("%d", &size);
+    printf("\nEnter Rules as 'E=E+T' format:\n");
+    for (i = 0; i < size; i++) {
+        printf("Rule %d: ", i + 1);
+        scanf("%s", gram[i]);
+    }
+
+    printf("\nGrammar Rules Entered:\n");
+    for (i = 0; i < size; i++) {
+        printf("%s\n", gram[i]);
+    }
+}
+
+// Function to get the input string
+void getInput() {
+    printf("\nEnter input string followed by '$': ");
+    scanf("%s", input);
+    printf("\nInput is: %s\n", input);
+}
+
+// Function to validate and apply reduction
+int validate() {
+    int i, j, pos = -1;
+    int matchFound = 0;
+
+    // Check each rule for a possible reduction
+    for (i = 0; i < size; i++) {
+        int len = strlen(gram[i]) - 2;  // Length of the right-hand side (RHS) of the rule
+        char *rhs = gram[i] + 2;        // Point to the RHS of the rule
+
+        // Check if the stack ends with the RHS of this rule
+        if (sizes >= len && strncmp(stack + sizes - len, rhs, len) == 0) {
+            pos = i;
+            matchFound = 1;
+            break;
+        }
+    }
+
+    // If a matching rule is found, perform the reduction
+    if (matchFound) {
+        sizes -= strlen(gram[pos] + 2); // Remove RHS from the stack
+        stack[sizes] = gram[pos][0];   // Add the LHS to the stack
+        stack[sizes + 1] = '\0';
+        sizes++;
+        printf("\nReduce using rule: %s", gram[pos]);
+        return 1;
+    }
+
+    return 0; // No reduction was possible
+}
+
+// Function to perform shift and reduce operations
+void applyOp() {
+    int i = 0;
+    while (1) {
+        // Shift operation if input is not empty and not yet at '$'
+        if (input[i] != '\0' && input[i] != '$') {
+            stack[sizes] = input[i];
+            stack[sizes + 1] = '\0';
+            sizes++;
+            printf("\nShift: %c", input[i]);
+            input[i] = ' ';
+            i++;
+        }
+
+        // Attempt to reduce
+        if (!validate()) {
+            // If no reduction was possible and the input is consumed, stop parsing
+            if (input[i] == '$' && sizes == 2 && stack[1] == 'E') {
+                printf("\nInput fully parsed and accepted.\n");
+                break;
+            } else if (input[i] == '\0') {
+                printf("\nParsing failed: Input cannot be reduced further.\n");
+                break;
+            }
+        }
+
+        // If input is empty and no further reduction is possible, break the loop
+        if (input[i] == '\0' && sizes == 2 && stack[1] == 'E') {
+            printf("\nInput fully parsed and accepted.\n");
+            break;
+        }
+    }
+}
+
+int main() {
+    // Initialize the stack with the end marker '$'
+    stack[0] = '$';
+    stack[1] = '\0';
+    sizes = strlen(stack);
+
+    // Get grammar rules and input from the user
+    getGram();
+    getInput();
+
+    // Perform the shift-reduce parsing
+    applyOp();
+
+    return 0;
+}
